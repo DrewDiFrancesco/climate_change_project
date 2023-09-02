@@ -25,6 +25,10 @@ def main(spark=None, override_args=None):
     if spark is None:
         spark = SparkManager(config_manager.args).get_spark()
 
+    if config_manager.args['s3_bucket'] != '':
+        print(f"Updating data_path because s3_bucket is not an empty string...")
+        config_manager.args['data_path'] = config_manager.args['s3_bucket']+'/data'
+    
     data_path = config_manager.args['data_path']
 
     # Specify the path to your Excel file
