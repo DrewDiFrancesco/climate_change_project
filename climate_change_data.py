@@ -119,9 +119,8 @@ def main(spark=None, override_args=None):
     etl_helpers.write_data(s_income_level_df, s3_bucket=config_manager.args['s3_bucket'], path_to_files=config_manager.args['data_path'], file_name="agg_income_level", mode="overwrite", partition_columns=None)
 
 if __name__ == '__main__':
-    root_path = os.path.dirname(os.path.abspath(__file__))
-    drews_conf = {'data_path': '/Users/drewdifrancesco/Desktop/data',
-                  'root_path': root_path,
-                  's3_bucket': None}
+#     drews_conf = {'data_path': '/Users/drewdifrancesco/Desktop/data',
+#                   'root_path': root_path,
+#                   's3_bucket': None}
 
-    main(None,override_args=drews_conf)
+    main(None,override_args={})
