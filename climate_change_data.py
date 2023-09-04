@@ -21,9 +21,13 @@ def main(spark=None, override_args=None):
 
     print(f"HERE is the new default args: {default_args}")
     config_manager = config.Config(default_args)
+    
+    running_locally = config_manager.args['running_locally']
 
     if spark is None:
+        print(f"Getting Spark")
         spark = SparkManager(config_manager.args).get_spark()
+        print("Done getting spark")
 
     if config_manager.args['s3_bucket'] != '':
         print(f"Updating data_path because s3_bucket is not an empty string...")
@@ -32,6 +36,7 @@ def main(spark=None, override_args=None):
     data_path = config_manager.args['data_path']
 
     # Specify the path to your Excel file
+    print(f"Reading in initial data from {data_path}")
     file_path = f'{data_path}/climate_change_download_0.xls'
 
     # Read the Excel file
@@ -114,13 +119,13 @@ def main(spark=None, override_args=None):
     StructField("Topic", StringType(), True),
     StructField("Definition", StringType(), True)
     ])
-
-    # print(aggregated_df)
     s_income_level_df = spark.createDataFrame(income_level_df, schema)
     s_region_df = spark.createDataFrame(region_df, schema)
     s_non_aggregated_df = spark.createDataFrame(non_aggregated_df, schema)
 
-    etl_helpers.write_data(s_income_level_df, s3_bucket=config_manager.args['s3_bucket'], path_to_files=config_manager.args['data_path'], file_name="agg_income_level", mode="overwrite", partition_columns=None)
+    etl_helpers.write_data(s_income_level_df, path_to_files=config_manager.args['data_path'], file_name="agg_income_level", mode="overwrite", partition_columns=None)
+    etl_helpers.write_data(s_region_df, path_to_files=config_manager.args['data_path'], file_name="agg_region", mode="overwrite", partition_columns=None)
+    etl_helpers.write_data(s_non_aggregated_df, path_to_files=config_manager.args['data_path'], file_name="climate_change_data", mode="overwrite", partition_columns=["Year", "Region"])
 
 if __name__ == '__main__':
 #     drews_conf = {'data_path': '/Users/drewdifrancesco/Desktop/data',

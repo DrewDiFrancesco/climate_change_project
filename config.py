@@ -49,17 +49,10 @@ class Config:
     
     def is_running_locally(self):
 
-        if "SPARK_YARN_STAGING_DIR" in os.environ:
-            running_locally = False
-
-        elif "EMR_STEP_ID" in os.environ:
-            running_locally = False
-
-        elif self.is_notebook():
-            running_locally = False
-
-        else:
+        if self.args['s3_bucket'] == "":
             running_locally = True
+        else:
+            running_locally = False
 
         self.args['running_locally'] = running_locally
 

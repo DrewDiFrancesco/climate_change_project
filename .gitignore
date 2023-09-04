@@ -1,2 +1,5 @@
 *.log
 *.ipynb
+*.jar
+hadoop-3.3.6/
+*.tar
