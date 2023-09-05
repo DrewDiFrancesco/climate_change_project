@@ -128,8 +128,9 @@ def main(spark=None, override_args=None):
     etl_helpers.write_data(s_non_aggregated_df, path_to_files=config_manager.args['data_path'], file_name="climate_change_data", mode="overwrite", partition_columns=["Year", "Region"])
 
 if __name__ == '__main__':
-#     drews_conf = {'data_path': '/Users/drewdifrancesco/Desktop/data',
-#                   'root_path': root_path,
-#                   's3_bucket': None}
+    root_path = os.path.dirname(os.path.abspath(__file__))
+    drews_conf = {'data_path': '/Users/drewdifrancesco/Desktop/data',
+                  'root_path': root_path,
+                  's3_bucket': ''}
 
     main(None,override_args={})
