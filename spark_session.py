@@ -1,11 +1,11 @@
 import logging
 import os
-import urllib.request
+# import urllib.request
 from pyspark.sql import SparkSession
-from pyspark import SparkConf, SparkContext
+# from pyspark import SparkConf, SparkContext
 import botocore.session
-import sagemaker_pyspark
-import pyspark
+# import sagemaker_pyspark
+# import pyspark
 
 class SparkManager:
     def __init__(self, args: dict, job_name=None):

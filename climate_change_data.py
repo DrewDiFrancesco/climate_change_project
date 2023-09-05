@@ -34,6 +34,7 @@ def main(spark=None, override_args=None):
         config_manager.args['data_path'] = config_manager.args['s3_bucket']+'/data'
     
     data_path = config_manager.args['data_path']
+    non_agg_partition_col = ["Year", "Region"]
 
     # Specify the path to your Excel file
     print(f"Reading in initial data from {data_path}")
@@ -55,7 +56,6 @@ def main(spark=None, override_args=None):
     data = dfs[0]  # First sheet
     country = dfs[1]  # Second sheet
     series = dfs[2]  # Third sheet
-
     # Columns to keep as identifiers
     id_columns = ['Country code', 'Country name', 'Series code', 'Series name', 'SCALE', 'Decimals']
 
@@ -119,18 +119,19 @@ def main(spark=None, override_args=None):
     StructField("Topic", StringType(), True),
     StructField("Definition", StringType(), True)
     ])
+    
     s_income_level_df = spark.createDataFrame(income_level_df, schema)
     s_region_df = spark.createDataFrame(region_df, schema)
     s_non_aggregated_df = spark.createDataFrame(non_aggregated_df, schema)
 
     etl_helpers.write_data(s_income_level_df, path_to_files=config_manager.args['data_path'], file_name="agg_income_level", mode="overwrite", partition_columns=None)
     etl_helpers.write_data(s_region_df, path_to_files=config_manager.args['data_path'], file_name="agg_region", mode="overwrite", partition_columns=None)
-    etl_helpers.write_data(s_non_aggregated_df, path_to_files=config_manager.args['data_path'], file_name="climate_change_data", mode="overwrite", partition_columns=["Year", "Region"])
+    etl_helpers.write_data(s_non_aggregated_df, path_to_files=config_manager.args['data_path'], file_name="climate_change_data", mode="overwrite", partition_columns=non_agg_partition_col)
 
 if __name__ == '__main__':
-    root_path = os.path.dirname(os.path.abspath(__file__))
-    drews_conf = {'data_path': '/Users/drewdifrancesco/Desktop/data',
-                  'root_path': root_path,
-                  's3_bucket': ''}
+    # root_path = os.path.dirname(os.path.abspath(__file__))
+    # drews_conf = {'data_path': '/Users/drewdifrancesco/Desktop/data',
+    #               'root_path': root_path,
+    #               's3_bucket': ''}
 
     main(None,override_args={})
