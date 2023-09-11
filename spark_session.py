@@ -10,6 +10,19 @@ import botocore.session
 class SparkManager:
     def __init__(self, args: dict, job_name=None):
 
+        """
+        Initializes a spark session object
+        
+        Args:
+            args (dict): The configuration you want to pass to the object
+            job_name (string): An optional name you can call the spark session.  Lets you know what you used the session for
+
+        Attributes:
+            self.spark (spark session)
+            self.logger (logger variable)
+            self.log_filepath (directory that holds the log files)
+        """
+        
         if not isinstance(args, dict):
             args = vars(args)
         self.args = args
@@ -26,6 +39,14 @@ class SparkManager:
             os.mkdir(self.log_filepath)
 
     def initialize_logger(self, log_filepath):
+        
+        """
+        Sets the logger attribute equal to a logging variable 
+
+        Args:
+            log_filepath (string): directory that holds the log files
+        """
+
         log_file = os.path.join(log_filepath, f"{self.job_name}.log")
 
         logging.basicConfig(
@@ -47,6 +68,11 @@ class SparkManager:
         self.logger = spark_logger
 
     def get_spark(self, jar_file_location=None):
+        
+        """
+        Sets up a spark session dependent on if you are running locally or if you are using s3
+        """
+
         print(f"checking to see if running locally...")
         if self.args['running_locally']:
             print(f"Setting up spark for local")

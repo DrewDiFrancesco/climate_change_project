@@ -14,6 +14,26 @@ import etl_helpers as etl_helpers
 
 def main(spark=None, override_args=None):
 
+    """
+    Perform data processing, ETL (Extract, Transform, Load) operations, and write results to files.
+
+    This function is the main entry point for data processing and ETL operations. It handles various tasks,
+    including updating configuration parameters, initializing Spark if necessary, processing Excel data,
+    performing data transformations, and writing the results to files. The behavior can be customized
+    using override arguments.
+
+    Args:
+        spark (SparkSession, optional): An existing SparkSession instance. If not provided, a new one will be created.
+        override_args (dict, optional): A dictionary of override arguments to modify the default behavior.
+
+    Note:
+        - Override arguments can be used to modify the behavior of the data processing and ETL pipeline.
+        - If `spark` is not provided, a new SparkSession instance will be created.
+        - Configuration parameters are updated based on default arguments and override settings.
+        - Data is processed, transformed, and written to files based on the specified configuration.
+
+    """
+
     print(f"HERE is the override args: {override_args}")
 
     if override_args:
