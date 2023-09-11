@@ -10,26 +10,26 @@ class Config:
     def __init__(self, args: dict = None, config_path: str = None) -> dict:
 
         """
-    Initialize the configuration manager with provided arguments or defaults.
+        Initialize the configuration manager with provided arguments or defaults.
 
-    This method initializes the configuration manager with a dictionary of arguments (`args`) and an optional
-    configuration file path (`config_path`). If `args` are not provided, default arguments are obtained. The
-    `running_locally` flag is set based on the environment. If a `config_path` is provided and the file has
-    a `.env` extension, it reads and extracts the S3 bucket information and updates the arguments accordingly.
+        This method initializes the configuration manager with a dictionary of arguments (`args`) and an optional
+        configuration file path (`config_path`). If `args` are not provided, default arguments are obtained. The
+        `running_locally` flag is set based on the environment. If a `config_path` is provided and the file has
+        a `.env` extension, it reads and extracts the S3 bucket information and updates the arguments accordingly.
 
-    Args:
-        args (dict, optional): A dictionary of configuration arguments. If not provided, default arguments are used.
-        config_path (str, optional): Path to a configuration file. If provided, it must have a `.env` extension.
+        Args:
+            args (dict, optional): A dictionary of configuration arguments. If not provided, default arguments are used.
+            config_path (str, optional): Path to a configuration file. If provided, it must have a `.env` extension.
 
-    Returns:
-        dict: The updated configuration arguments.
+        Returns:
+            dict: The updated configuration arguments.
 
-    Note:
-        - If `args` are not provided, default arguments are obtained using the `get_default_args` method.
-        - The `running_locally` flag is set based on the environment using the `is_running_locally` method.
-        - If `config_path` is provided and the file has a `.env` extension, it is read to extract the S3 bucket
-          information and update the arguments accordingly.
-    """
+        Note:
+            - If `args` are not provided, default arguments are obtained using the `get_default_args` method.
+            - The `running_locally` flag is set based on the environment using the `is_running_locally` method.
+            - If `config_path` is provided and the file has a `.env` extension, it is read to extract the S3 bucket
+            information and update the arguments accordingly.
+        """
         
         if not args:
             args = self.get_default_args()
