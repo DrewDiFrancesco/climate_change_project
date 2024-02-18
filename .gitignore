@@ -4,3 +4,5 @@
 hadoop-3.3.6/
 *.tar
 venv/
+__pycache__
+logs/
