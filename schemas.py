@@ -13,7 +13,8 @@ climate_change_data_spark = StructType([
     StructField("Income group", StringType(), True),
     StructField("Lending category", StringType(), True),
     StructField("Topic", StringType(), True),
-    StructField("Definition", StringType(), True)
+    StructField("Definition", StringType(), True),
+    StructField("value_percentile", FloatType(), True)
 ])
 
 climate_change_data_pandas = {
@@ -28,7 +29,8 @@ climate_change_data_pandas = {
     "Income group": str,
     "Lending category": str,
     "Topic": str,
-    "Definition": str
+    "Definition": str,
+    "value_percentile": float
 }
 
 agg_region_spark = StructType([
@@ -109,11 +111,13 @@ agg_income_level_pandas = {
 map_data_spark = StructType([
     StructField("Country name", StringType(), True),
     StructField("Series name", StringType(), True),
-    StructField("Average value", DoubleType(), True)
+    StructField("Value", FloatType(), True),
+    StructField("value_percentile", FloatType(), True)
 ])
 
 map_data_pandas = {
     "Country name": str,
     "Series name": str,
-    "Average value": float
+    "Value": float,    
+    "value_percentile": float
 }

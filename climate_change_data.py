@@ -11,6 +11,8 @@ from pyspark.sql.types import StructType, StructField, StringType
 import etl_helpers as etl_helpers
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
+from pyspark.sql import Window
+
 
 
 
@@ -154,44 +156,86 @@ def main(spark=None, override_args=None):
     s_region_df = s_region_df.drop('Decimals')
     s_region_df = s_region_df.drop('SCALE')
 
-    s_non_aggregated_df = s_non_aggregated_df.filter(col("Value").cast("double").isNotNull())
+    s_non_aggregated_df = s_non_aggregated_df\
+        .filter(col("Value").cast("double").isNotNull())\
+        .filter('Value is not null')\
+        .filter(col('Value') != 'NaN')
     s_non_aggregated_df = s_non_aggregated_df.drop('Decimals')
     s_non_aggregated_df = s_non_aggregated_df.drop('SCALE')
-    map_data = s_non_aggregated_df.groupBy(['Series name','Country name']).agg(avg('Value').alias("Average value"))
-    map_data = map_data.withColumn('Average value', round(col('Average value'),1))
 
     metric_high_bad_list = ['Agricultural land under irrigation (% of total ag. land)',
                             'Annual freshwater withdrawals (% of internal resources)',
-                            'CO2 emissions per capita (metric tons)','CO2 emissions per units of GDP (kg/$1,000 of 2005 PPP $)',
-                            'CO2 emissions, total (KtCO2)','Child malnutrition, underweight (% of under age 5)',
-                            'Droughts, floods, extreme temps (% pop. avg. 1990-2009)','Ease of doing business (ranking 1-183; 1=best)',
+                            'CO2 emissions per capita (metric tons)',
+                            'CO2 emissions per units of GDP (kg/$1,000 of 2005 PPP $)',
+                            'CO2 emissions, total (KtCO2)',
+                            'Child malnutrition, underweight (% of under age 5)',
+                            'Droughts, floods, extreme temps (% pop. avg. 1990-2009)',
+                            'Ease of doing business (ranking 1-183; 1=best)',
                             'Energy use per capita (kilograms of oil equivalent)',
                             'Energy use per units of GDP (kg oil eq./$1,000 of 2005 PPP $)',
-                            'Foreign direct investment, net inflows (% of GDP)', 'GDP ($)','Land area below 5m (% of land area)',
-                            'Malaria incidence rate (per 100,000 people)','Methane (CH4) emissions, total (KtCO2e)',
-                            'Nitrous oxide (N2O) emissions, total (KtCO2e)','Other GHG emissions, total (KtCO2e)',
-                            'Population below 5m (% of total)','Population living below $1.25 a day (% of total)',
+                            'Foreign direct investment, net inflows (% of GDP)', 'GDP ($)',
+                            'Land area below 5m (% of land area)',
+                            'Malaria incidence rate (per 100,000 people)',
+                            'Methane (CH4) emissions, total (KtCO2e)',
+                            'Nitrous oxide (N2O) emissions, total (KtCO2e)',
+                            'Other GHG emissions, total (KtCO2e)',
+                            'Population below 5m (% of total)',
+                            'Population living below $1.25 a day (% of total)',
                             'Projected annual precipitation change (2045-2065, mm)',
-                            'Projected annual temperature change (2045-2065, Celsius)','Projected change in annual cool days/cold nights',
-                            'Projected change in annual hot days/warm nights','Under-five mortality rate (per 1,000)',
+                            'Projected annual temperature change (2045-2065, Celsius)',
+                            'Projected change in annual cool days/cold nights',
+                            'Projected change in annual hot days/warm nights',
+                            'Under-five mortality rate (per 1,000)',
     ]
-    columns_to_remove = ['Annex-I emissions reduction target','Average daily min/max temperature (1961-1990, Celsius)',
-                         'GHG net emissions/removals by LUCF (MtCO2e)','Latest UNFCCC national communication','NAMA submission',
-                         'NAPA submission','Population in urban agglomerations >1million (%)',
-                         'Ratio of girls to boys in primary & secondary school (%)','Urban population', 
-                         'Urban population growth (annual %)'
+    columns_to_remove = ['Annex-I emissions reduction target',
+                         'Average daily min/max temperature (1961-1990, Celsius)',
+                         'Latest UNFCCC national communication',
+                         'NAMA submission',
+                         'NAPA submission',
+                         'Population in urban agglomerations >1million (%)',
+                         'Ratio of girls to boys in primary & secondary school (%)',
+                         'Urban population', 
+                         'Urban population growth (annual %)', 'Capital city',
+                         'Region', 'Income group', 'Lending category',
+                         'Series code'
     ]
+
+    map_data = s_non_aggregated_df\
+        .groupBy(['Series name','Country name'])\
+        .agg(avg('Value').alias("Value"))
+    map_data = map_data.withColumn('Value', round(col('Value'),1))
+
+    def getPercentile(df,metric_high_bad_list,partition_columns):
+        df = df.withColumn("high_value_is_bad", 
+        when(col('Series name').isin(metric_high_bad_list), True)
+        .otherwise(False))
+        window_spec = Window.partitionBy(partition_columns).orderBy("Value")
+        df = df.withColumn("value_percentile", percent_rank().over(window_spec))
+        df = df.withColumn("value_percentile", 
+            when(df["high_value_is_bad"], 1 - df["value_percentile"])
+            .otherwise(df["value_percentile"]))
+        df = df.drop("high_value_is_bad")
+        df = df.withColumn('value_percentile', round(100*col('value_percentile'),1))
+        return df
+    
+
+    map_data = getPercentile(map_data,metric_high_bad_list,['Series name'])
+    s_non_aggregated_df = getPercentile(s_non_aggregated_df,metric_high_bad_list,
+        ['Year','Series name'])
+
+    # Drop unnecessary columns
+    # map_data = map_data.drop("high_value_is_bad", "Year", "value_list")
 
     for output_type in ['parquet','csv']:
         final_data_path = data_path
         if output_type == 'csv':
             final_data_path = os.path.join(data_path, 'power_BI_data')
-        etl_helpers.write_data(s_income_level_df, path_to_files=final_data_path, file_name="agg_income_level", 
-                               mode="overwrite", output_type = output_type)
-        etl_helpers.write_data(s_region_df, path_to_files=final_data_path, file_name="agg_region", mode="overwrite", 
-                                output_type = output_type)
-        etl_helpers.write_data(s_non_aggregated_df, path_to_files=final_data_path, file_name="climate_change_data", 
-                               mode="overwrite", partition_columns=non_agg_partition_col, output_type = output_type)
+        # etl_helpers.write_data(s_income_level_df, path_to_files=final_data_path, file_name="agg_income_level", 
+        #                        mode="overwrite", output_type = output_type)
+        # etl_helpers.write_data(s_region_df, path_to_files=final_data_path, file_name="agg_region", mode="overwrite", 
+        #                         output_type = output_type)
+        # etl_helpers.write_data(s_non_aggregated_df, path_to_files=final_data_path, file_name="climate_change_data", 
+        #                        mode="overwrite", partition_columns=non_agg_partition_col, output_type = output_type)
         etl_helpers.write_data(map_data, path_to_files=final_data_path, file_name="map_data", 
                                mode="overwrite", output_type = output_type)
 
